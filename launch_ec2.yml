@@ -1,0 +1,92 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+          - name: creating VPC
+            ec2_vpc_net:
+                    name: kubernetes_vpc
+                    cidr_block: 10.50.0.0/16
+                    region: ap-south-1
+                    dns_hostnames: yes
+                    tags:
+                            module: ec2_vpc_net
+                            this: kubernetes_2
+            register: vpc_info
+            tags:
+                    - always
+          - name: saving vpc id
+            set_fact:
+                    vpc_id: "{{ vpc_info.vpc.id }}"
+          - name: Create subnet
+            ec2_vpc_subnet:
+                    state: present
+                    vpc_id: "{{vpc_id}}"
+                    cidr: 10.50.0.0/16
+                    region: ap-south-1
+                    az: ap-south-1a
+                    tags:
+                            mysub: my_kubernet_sub_id
+            register: sub_id
+          - name: saving fact for subet id
+            set_fact:
+                    sub_id: "{{sub_id.subnet.id}}"
+          - name: Creating gateway
+            ec2_vpc_igw:
+                    vpc_id: "{{vpc_id}}"
+                    state: present
+                    region: ap-south-1
+                    tags:
+                            myvpc: vpc_gw_kubernet
+            register: vpc_gw_info
+          - name: saving fact for gateway id
+            set_fact:
+                    gw_id: "{{vpc_gw_info.gateway_id}}"
+          - debug: msg="{{gw_id}}"
+            tags:
+                    - always
+          - name: associate route table
+            ec2_vpc_route_table:
+                    vpc_id: "{{vpc_id}}"
+                    region: ap-south-1
+                    routes:
+                            - dest: 0.0.0.0/0
+                              gateway_id: "{{gw_id}}"
+            register: public_route_table
+          - name: example2 ec2 key
+            ec2_key:
+                    name: key-pair_aws_kubernetes
+                    key_material: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9buN1m97ZMQuUVXkSQBgL+1N0zrWve/8tIVSU5aH7TenQwnGsOXjgK5/VxyrYN0Z1UokxPZGggsBdXeQJ2Ejt68X5O+LfmNn0aPjOFnrvCfQNrTLyeMpSutoBeC0gZmzSijOe75gLPOnzysVKS6OakkXp9TgFvi7R06lkQ5TiGpgpFWUlCnAW7fTpVI3Qs+LPDwjaFg5J2shCt3xK4RXUw6o/J371qhKBceW1OXowmwYu2q7nWOwq8QHiTQafC2ApoGnxH5eVe4Lm30el2j0g8Mcif1dk2UVg+Iq9wb1xOYPVzC9o9g9iuK5pmJNOTp4cKk5WnPqwMoAt+muRUnETh4e1pr42yeLWwPa52+13VUce+k62rXOaBADRjMS6ppS4CXfHtzCWB2viLHGH04tVit/v6E0lGxubo57Sh7O7Y4ypR2y/zxdTEJx1AtENp+2zth3JjKH0Xt851oetexGPL5lep8rq0a+P305CUNSuvM1OQI1+R7B72H6aa4xfnDEkt3vmINhKxMq1sy5Y75xX4p/JDhwcFdAXbBYnKKNLIlFMlpl6FaQ4CUDohrYBWgwb5sLKatJEGwGxkFSNBrc4SThrgFYqsfkoI+VkiS5oapVTF5WOq9uhnu90PkbWEz20BIbDVMLdiXVza0I2ey+1RWomTrL57PpNhAICjcJYkQ== rajesh-pc@rajeshpc-Inspiron-3542'
+                    state: present
+          - name: creating security group
+            ec2_group:
+                    name: my_security_group
+                    description: security
+                    vpc_id: "{{ vpc_id }}"
+                    region: ap-south-1
+                    rules:
+                            - proto: tcp
+                              from_port: 22
+                              to_port: 22
+                              cidr_ip: 0.0.0.0/0
+                    tags:
+                            mysgname: sg_kubernetes
+            register: sg_id
+            #          - name: saving fact for gateway id
+            # set_fact:
+            #        sg_k8_id: "{{sg_id}}"
+          - debug: msg="{{sg_id}}"
+          - name: Launching ec2 instance
+            ec2_instance:
+                    name: "etcd"
+                    instance_type: t2.micro
+                    image_id: ami-0123b531fc646552f
+                    key_name: aws_vpn
+                    region: ap-south-1
+                    vpc_subnet_id: "{{sub_id}}" 
+                    network:
+                            assign_public_ip: true
+                            private_ip_address: 10.50.0.10
+                    tags:
+                            type: aws_kubernetes
+                    key_name: key-pair_aws_kubernetes
