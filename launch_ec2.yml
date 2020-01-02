@@ -56,7 +56,7 @@
           - name: example2 ec2 key
             ec2_key:
                     name: key-pair_aws_kubernetes
-                    key_material: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9buN1m97ZMQuUVXkSQBgL+1N0zrWve/8tIVSU5aH7TenQwnGsOXjgK5/VxyrYN0Z1UokxPZGggsBdXeQJ2Ejt68X5O+LfmNn0aPjOFnrvCfQNrTLyeMpSutoBeC0gZmzSijOe75gLPOnzysVKS6OakkXp9TgFvi7R06lkQ5TiGpgpFWUlCnAW7fTpVI3Qs+LPDwjaFg5J2shCt3xK4RXUw6o/J371qhKBceW1OXowmwYu2q7nWOwq8QHiTQafC2ApoGnxH5eVe4Lm30el2j0g8Mcif1dk2UVg+Iq9wb1xOYPVzC9o9g9iuK5pmJNOTp4cKk5WnPqwMoAt+muRUnETh4e1pr42yeLWwPa52+13VUce+k62rXOaBADRjMS6ppS4CXfHtzCWB2viLHGH04tVit/v6E0lGxubo57Sh7O7Y4ypR2y/zxdTEJx1AtENp+2zth3JjKH0Xt851oetexGPL5lep8rq0a+P305CUNSuvM1OQI1+R7B72H6aa4xfnDEkt3vmINhKxMq1sy5Y75xX4p/JDhwcFdAXbBYnKKNLIlFMlpl6FaQ4CUDohrYBWgwb5sLKatJEGwGxkFSNBrc4SThrgFYqsfkoI+VkiS5oapVTF5WOq9uhnu90PkbWEz20BIbDVMLdiXVza0I2ey+1RWomTrL57PpNhAICjcJYkQ== rajesh-pc@rajeshpc-Inspiron-3542'
+                    key_material: "{{ lookup('file', '~/.ssh/my_aws.pub') }}"
                     state: present
           - name: creating security group
             ec2_group:
