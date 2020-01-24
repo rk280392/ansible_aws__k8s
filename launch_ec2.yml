@@ -90,3 +90,20 @@
                     tags:
                             type: aws_kubernetes
                     key_name: key-pair_aws_kubernetes
+          - name: Creating IAM Role
+            iam_role:
+                    name: kubernetes_ansible_role_1
+                    state: present
+                    assume_role_policy_document: "{{ lookup('file','policy.json') }}"
+                    description: This is My New Kubernetes role
+            register: iam_role_name
+          - name: saving fact for iam role name
+            set_fact:
+                    iam_k8_name: "{{iam_role_name}}"
+          - name: Assign a policy called any group
+            iam_policy:
+                    iam_type: group
+                    iam_name: "{{iam_k8_name}}"
+                    policy_name: kubernetes_iam_policy
+                    state: present
+                    policy_document: kubernetes.json

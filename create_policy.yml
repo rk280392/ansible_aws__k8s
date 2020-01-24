@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+          - name: Assign a policy called any group
+            iam_policy:
+                    iam_type: group
+                    iam_name: administrators
+                    policy_name: kubernetes_iam_policy
+                    state: present
+                    policy_document: kubernetes.json
